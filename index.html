@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/theme/material-darker.min.css">
+    <link rel="stylesheet" href="/static/style.css">
+    <title>web attack PoC</title>
+    <style>
+        .CodeMirror {
+            height: auto;
+            min-height: 400px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1 class="my-4">
+        <img src="/static/logo.png" alt="Web Assistant Logo" style="height: 50px;">
+        web attack PoC creator</h1>
+    <div class="mb-3">
+        <div class="btn-group">
+            <button class="btn btn-primary dropdown-toggle" type="button" id="importButton" data-bs-toggle="dropdown" aria-expanded="false">
+                Import
+            </button>
+            <ul class="dropdown-menu" aria-labelledby="importButton">
+                {% for template in templates %}
+                    <li><a class="dropdown-item" href="#" onclick="importTemplate('{{ template }}')">{{ template }}</a></li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    <form id="addTemplateForm">
+        <div class="mb-3">
+            <label for="html" class="form-label">HTML Content:</label>
+            <textarea id="html" name="html" rows="10" class="form-control" required></textarea>
+        </div>
+        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addTemplateModal">Save as Template</button>
+        <button type="button" class="btn btn-primary" id="serveButton">Serve</button>
+    </form>
+    <br>
+    <div id="infoField" class="alert alert-info" role="alert">
+        {% if latest_served.temp_id %}
+            Template served at: <a href="/temp/{{ latest_served.temp_id }}" target="_blank">/temp/{{ latest_served.temp_id }}</a>
+        {% else %}
+            The URL where the template is served will be displayed here.
+        {% endif %}
+    </div>
+</div>
+
+<!-- Add Template Modal -->
+<div class="modal fade" id="addTemplateModal" tabindex="-1" aria-labelledby="addTemplateModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addTemplateModalLabel">Add Template</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="modalAddTemplateForm">
+                    <div class="mb-3">
+                        <label for="modalName" class="form-label">Name:</label>
+                        <input type="text" class="form-control" id="modalName" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="modalDescription" class="form-label">Description:</label>
+                        <input type="text" class="form-control" id="modalDescription" name="description" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Save Template</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/xml/xml.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/javascript/javascript.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/css/css.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/htmlmixed/htmlmixed.min.js"></script>
+<script>
+
+    loadTempTemplate()
+    const editor = CodeMirror.fromTextArea(document.getElementById('html'), {
+        lineNumbers: true,
+        mode: 'htmlmixed',
+        theme: 'material-darker'
+    });
+
+    function importTemplate(template) {
+        fetch(`/get_template_html/${template}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.html) {
+                    editor.setValue(data.html);
+                } else {
+                    alert('Template not found');
+                }
+            });
+    }
+
+    function loadTempTemplate() {
+        fetch(`/get_temp_template_html`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.html) {
+                    editor.setValue(data.html);
+                } else {
+                    importTemplate("base")
+                }
+            });
+    }
+
+    document.getElementById('modalAddTemplateForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+        const name = document.getElementById('modalName').value;
+        const description = document.getElementById('modalDescription').value;
+        const html = editor.getValue();
+
+        fetch(`/get_template_html/${name}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.html) {
+                    if (confirm(`A template with the name "${name}" already exists. Do you want to overwrite it?`)) {
+                        saveTemplate(name, description, html);
+                    }
+                } else {
+                    saveTemplate(name, description, html);
+                }
+            });
+    });
+
+    function saveTemplate(name, description, html) {
+        fetch('/add_template', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ name, description, html })
+        }).then(response => response.json())
+          .then(data => {
+              alert(data.message);
+              window.location.reload();
+          });
+    }
+
+    document.getElementById('serveButton').addEventListener('click', function() {
+        const html = editor.getValue();
+        fetch('/serve_template', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ html })
+        }).then(response => response.json())
+          .then(data => {
+              alert(data.message);
+              const infoField = document.getElementById('infoField');
+              infoField.innerHTML = `Template served at: <a href="/temp/${data.temp_id}" target="_blank">/temp/${data.temp_id}</a>`;
+          });
+    });
+
+    function deleteTempTemplate(tempId) {
+        fetch(`/delete_temp_template/${tempId}`, {
+            method: 'DELETE'
+        }).then(response => response.json())
+          .then(data => {
+              alert(data.message);
+              window.location.reload();
+          });
+    }
+</script>
+</body>
+</html>
