@@ -1,6 +1,6 @@
 # web attack PoC creator (WAPC)
 
-WAPC is a web application designed to aid in building and serving proof-of-concept (PoC) attacks for various web vulnerabilities during penetration tests. It provides a interface for configuring and serving custom HTML pages to demonstrate vulnerabilities such as Cross-Origin Resource Sharing (CORS), Cross-Site Request Forgery (CSRF), Clickjacking, etc. Custom templates can be added and easily changed. 
+WAPC is a web application designed to aid in building and serving proof-of-concept (PoC) attacks for various web vulnerabilities during penetration tests. It provides an interface for configuring and serving custom HTML pages to demonstrate vulnerabilities related to Cross-Origin Resource Sharing (CORS), Cross-Site Request Forgery (CSRF), Clickjacking, etc. Custom templates can be added and easily changed. Prebuilt templates will be added in the future.
 
 ![image](https://github.com/0xfschott/web-attack-poc/assets/17066401/a422cf23-8cfe-4d66-9b07-0c131fd22766)
 
