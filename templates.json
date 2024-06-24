@@ -1,18 +1,14 @@
 {
     "base": {
-        "description": "test",
         "path": "base.html"
     },
     "CORS": {
-        "description": "Cross-Origin Resource Sharing template",
         "path": "CORS.html"
     },
-    "csrf": {
-        "description": "Cross-Site Request Forgery template",
-        "path": "csrf.html"
-    },
     "clickjacking": {
-        "description": "Clickjacking template",
         "path": "clickjacking.html"
+    },
+    "clickjacking (multi-step)": {
+        "path": "clickjacking (multi-step).html"
     }
 }

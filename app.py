@@ -99,7 +99,6 @@ def get_temp_template_html():
 def add_template():
     new_template = request.json
     template_name = new_template['name']
-    template_description = new_template['description']
     template_html = new_template['html']
 
     # Save the HTML template
@@ -109,7 +108,6 @@ def add_template():
 
     # Update the templates JSON
     templates[template_name] = {
-        'description': template_description,
         'path': template_path
     }
     with open('templates.json', 'w') as file:

@@ -64,10 +64,6 @@
                         <label for="modalName" class="form-label">Name:</label>
                         <input type="text" class="form-control" id="modalName" name="name" required>
                     </div>
-                    <div class="mb-3">
-                        <label for="modalDescription" class="form-label">Description:</label>
-                        <input type="text" class="form-control" id="modalDescription" name="description" required>
-                    </div>
                     <button type="submit" class="btn btn-primary">Save Template</button>
                 </form>
             </div>
@@ -95,6 +91,8 @@
             .then(response => response.json())
             .then(data => {
                 if (data.html) {
+                    const name = document.getElementById('modalName')
+                    name.value = template;
                     editor.setValue(data.html);
                 } else {
                     alert('Template not found');
@@ -117,7 +115,6 @@
     document.getElementById('modalAddTemplateForm').addEventListener('submit', function(event) {
         event.preventDefault();
         const name = document.getElementById('modalName').value;
-        const description = document.getElementById('modalDescription').value;
         const html = editor.getValue();
 
         fetch(`/get_template_html/${name}`)
@@ -125,21 +122,21 @@
             .then(data => {
                 if (data.html) {
                     if (confirm(`A template with the name "${name}" already exists. Do you want to overwrite it?`)) {
-                        saveTemplate(name, description, html);
+                        saveTemplate(name, html);
                     }
                 } else {
-                    saveTemplate(name, description, html);
+                    saveTemplate(name, html);
                 }
             });
     });
 
-    function saveTemplate(name, description, html) {
+    function saveTemplate(name, html) {
         fetch('/add_template', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ name, description, html })
+            body: JSON.stringify({ name, html })
         }).then(response => response.json())
           .then(data => {
               alert(data.message);
